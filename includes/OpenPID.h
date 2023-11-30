@@ -28,8 +28,6 @@
 
 #include "../../OpenAHRS_9DOF/includes/Utils.h"
 
-#define FC_NULL  0.0f
-
 /* Further strategies will be added later. */
 typedef enum {
     MANUAL, // Manual mode of the anti-windup strategy (clamping method).
