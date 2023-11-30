@@ -27,6 +27,143 @@
 
 /*** Declaration of function prototypes. ***/
 
+// Add an example here.
+bool SetKpValue(PID *pid, const float Kp) {
+    bool error = false;  // Initialize the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        pid->Kp = Kp;
+    } else {
+        // The PID controller is not initialized.
+        error = true;   // Set the error flag to true.
+    }
+
+    return error;
+}
+
+// Add an example here.
+float GetKpValue(const PID *const pid, bool *error) {
+    float Kp;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        Kp = pid->Kp;
+    } else {
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        Kp = NAN;
+    }
+
+    return Kp;
+}
+
+// Add an example here.
+bool SetKiValue(PID *pid, const float Ki) {
+    bool error = false;  // Initialize the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        pid->Ki = Ki;
+    } else {
+        // The PID controller is not initialized.
+        error = true;   // Set the error flag to true.
+    }
+
+    return error;
+}
+
+// Add an example here.
+float GetKiValue(const PID *const pid, bool *error) {
+    float Ki;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        Ki = pid->Ki;
+    } else {
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        Ki = NAN;
+    }
+
+    return Ki;
+}
+
+// Add an example here.
+bool SetKdValue(PID *pid, const float Kd) {
+    bool error = false;  // Initialize the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        pid->Kd = Kd;
+    } else {
+        // The PID controller is not initialized.
+        error = true;   // Set the error flag to true.
+    }
+
+    return error;
+}
+
+// Add an example here.
+float GetKdValue(const PID *const pid, bool *error) {
+    float Kd;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        Kd = pid->Kd;
+    } else {
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        Kd = NAN;
+    }
+
+    return Kd;
+}
+
+// Add an example here.
+bool SetFcValue(PID *pid, const float Fc) {
+    bool error = false;  // Initialize the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        // Check that the cut-off frequency is not too low (avoid NaN type errors).
+        if (Fc > EPSILON) {
+            pid->Fc = Fc;   // Set the Fc value.
+        } else {
+            // The cut-off frequency is too low.
+            pid->Fc = EPSILON;  // Set the Fc value.
+        }
+
+        pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
+    } else {
+        // The PID controller is not initialized.
+        error = true;   // Set the error flag to true.
+    }
+
+    return error;
+}
+
+// Add an example here.
+float GetFcValue(const PID *const pid, bool *error) {
+    float Fc;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        Fc = pid->Fc;
+    } else {
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        Fc = NAN;
+    }
+
+    return Fc;
+}
+
+// Add an example here.
 PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, bool *error) {
     *error = true;  // Set the error flag to true.
 
@@ -87,4 +224,12 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
 
         return NewPID;  // Return the initialized new PID controller.
     }
+}
+
+bool UpdatePID(PID *pid, const float measurement) {
+    bool error = false; // Initialize the error flag to false.
+
+    float pidError = pid->setpoint - measurement;      // Calculate error from setpoint and measurement.
+    float deltaError = pidError - pid->previousError;  // Calculate the error variation.
+    pid->previousError = pidError;                     // Update previous error for next iteration.
 }
