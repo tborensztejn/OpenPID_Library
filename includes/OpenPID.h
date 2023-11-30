@@ -28,6 +28,8 @@
 
 #include "../../OpenAHRS_9DOF/includes/Utils.h"
 
+#define FC_NULL  0.0f
+
 /* Further strategies will be added later. */
 typedef enum {
     MANUAL, // Manual mode of the anti-windup strategy (clamping method).
@@ -138,7 +140,7 @@ bool SetFcValue(PID *pid, const float Fc);
 // This function is used to retrieve the cut-off frequency of the low-pass filter (Fc).
 float GetFcValue(const PID *const pid, bool *error);
 // This function initializes a PID controller with all its parameters.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, bool *error);
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const LowPassFilterStatus *const lowPassFilterStatus, bool *error);
 // This function calculates the output of the PID corrector according to its parameters and the measurement.
 bool UpdatePID(PID *pid, const float measurement);
 

@@ -164,7 +164,7 @@ float GetFcValue(const PID *const pid, bool *error) {
 }
 
 // Add an example here.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, bool *error) {
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const LowPassFilterStatus *const lowPassFilterStatus, bool *error) {
     *error = true;  // Set the error flag to true.
 
     // The check routine verifies that the pointer to the PID controller is not null, that the PID controller has not already been initialized.
@@ -177,19 +177,54 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
             pid->Ki = Ki;           // Set the Ki value.
             pid->Kd = Kd;           // Set the Kd value.
             pid->Ts = Ts;           // Set the Ts value.
-            pid->Fc = Fc;           // Set the Fc value.
             pid->satMin = satMin;   // Set the satMin value.
             pid->satMax = satMax;   // Set the satMax value.
 
-            // Check that the cut-off frequency is not too low (avoid NaN type errors).
-            if (Fc > EPSILON) {
-                pid->Fc = Fc;   // Set the Fc value.
-            } else {
-                // The cut-off frequency is too low.
-                pid->Fc = EPSILON;  // Set the Fc value.
-            }
+            // Check that the pointer is not NULL.
+            if (lowPassFilterStatus != NULL) {
+                // Check that the low-pass filter is enabled.
+                if (*lowPassFilterStatus == ENABLED) {
+                    // Check that the cut-off frequency is not too low (avoid NaN type errors).
+                    if (Fc > EPSILON) {
+                        pid->Fc = Fc;   // Set the Fc value.
+                    } else {
+                        // The cut-off frequency is too low.
+                        pid->Fc = EPSILON;  // Set the Fc value.
+                    }
 
-            pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
+                    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);          // Set the tau value.
+                    pid->lowPassFilterStatus = *lowPassFilterStatus;    // Set the low-pass filter status.
+                } else if (*lowPassFilterStatus == DISABLED) {
+                    // The low-pass filter is disabled.
+                    pid->Fc = 0.0f;  // Set the Fc value.
+                    pid->tau = 0.0f;    // Set the tau value.
+                    pid->lowPassFilterStatus = *lowPassFilterStatus;    // Set the low-pass filter status.
+                } else {
+                    // By default, the low-pass filter is enabled.
+                    // Check that the cut-off frequency is not too low (avoid NaN type errors).
+                    if (Fc > EPSILON) {
+                        pid->Fc = Fc;   // Set the Fc value.
+                    } else {
+                        // The cut-off frequency is too low.
+                        pid->Fc = EPSILON;  // Set the Fc value.
+                    }
+
+                    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
+                    pid->lowPassFilterStatus = ENABLED;         // Force the low-pass filter status.
+                }
+            } else {
+                // By default, the low-pass filter is enabled.
+                // Check that the cut-off frequency is not too low (avoid NaN type errors).
+                if (Fc > EPSILON) {
+                    pid->Fc = Fc;   // Set the Fc value.
+                } else {
+                    // The cut-off frequency is too low.
+                    pid->Fc = EPSILON;  // Set the Fc value.
+                }
+
+                pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
+                pid->lowPassFilterStatus = ENABLED;         // Force the low-pass filter status.
+            }
 
             pid->initialized = true;    // Set the initialization flag to true.
             *error = false;             // Set the error flag to false.
