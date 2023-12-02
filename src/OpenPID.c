@@ -251,8 +251,26 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
 
 bool UpdatePID(PID *pid, const float measurement) {
     bool error = false; // Initialize the error flag to false.
+    float derivativeActionGain = 0.0f;
 
-    float pidError = pid->setpoint - measurement;      // Calculate error from setpoint and measurement.
-    float deltaError = pidError - pid->previousError;  // Calculate the error variation.
-    pid->previousError = pidError;                     // Update previous error for next iteration.
+    // Check whether the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        return error;
+    }
+
+    float pidError = pid->setpoint - measurement;       // Calculate error from setpoint and measurement.
+    float deltaError = pidError - pid->previousError;   // Calculate the error variation.
+    pid->previousError = pidError;                      // Update previous error for next iteration.
+
+    float proportionalActionGain = pid->Kp * pidError;  // Calculate proportionnal action gain.
+
+    if (pid->lowPassFilterStatus) {
+        //derivativeActionGain = 2.0f * pid->Kd * deltaError / (2.0f * pid->tau + pid->Te) + ((2.0f * pid->tau - pid->Te) / (2.0f * pid->tau + pid->Te)) * pid->previousDerivativeActionGain;
+        //pid->previousDerivativeActionGain = derivativeActionGain;
+    } else {
+        // Add some code here.
+    }
+
+    return error;
 }
