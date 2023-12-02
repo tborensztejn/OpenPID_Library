@@ -141,6 +141,4 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
 // This function calculates the output of the PID corrector according to its parameters and the measurement.
 bool UpdatePID(PID *pid, const float measurement);
 
-
-
 #endif
