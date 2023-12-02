@@ -39,16 +39,20 @@ typedef enum {
 } AntiWindupMode;
 
 typedef struct {
-    float Kp;               // Gain of the proportional action.
-    float Ki;               // Gain of the integral action.
-    float Kd;               // Gain of the derivative action.
-    float Ts;               // Sampling period.
-    float Fc;               // Low-pass filter cut-off frequency of the derivative action.
-    float tau;              // Low-pass filter time constant.
-    float satMin;           // Minimum saturator output value.
-    float satMax;           // Maximum saturator output value.
-    float setpoint;         // Setpoint of the PID controller.
-    float previousError;    // The previous error calculated.
+    float Kp;                           // Gain of the proportional action.
+    float Ki;                           // Gain of the integral action.
+    float Kd;                           // Gain of the derivative action.
+    float Ts;                           // Sampling period.
+    float Fc;                           // Low-pass filter cut-off frequency of the derivative action.
+    float tau;                          // Low-pass filter time constant.
+    float outSatMin;                    // Minimum saturator output value.
+    float outSatMax;                    // Maximum saturator output value.
+    float integratorSatMin;             // Minimum integrator saturator output value.
+    float integratorSatMax;             // Maximum integrator saturator output value.
+    float setpoint;                     // Setpoint of the PID controller.
+    float output;                       // The ouput calculated by the PID controller.
+    float previousError;                // The previous error calculated.
+    float previousDerivativeActionGain; // The previous derivative action gain.
 
     /*
         Note:
@@ -96,10 +100,14 @@ typedef struct {
     .Ts = 0.0f, \
     .Fc = 0.0f, \
     .tau = 0.0f, \
-    .satMin = 0.0f, \
-    .satMax = 0.0f, \
+    .outSatMin = 0.0f, \
+    .outSatMax = 0.0f, \
+    .integratorSatMin = 0.0f, \
+    .integratorSatMax = 0.0f, \
     .setpoint = 0.0f, \
+    .output = 0.0f, \
     .previousError = 0.0f, \
+    .previousDerivativeActionGain = 0.0f, \
     .antiWindupMode = AUTO_CLAMPING, \
     .lowPassFilterStatus = ENABLED, \
     .initialized = false \
@@ -136,8 +144,18 @@ float GetKdValue(const PID *const pid, bool *error);
 bool SetFcValue(PID *pid, const float Fc);
 // This function is used to retrieve the cut-off frequency of the low-pass filter (Fc).
 float GetFcValue(const PID *const pid, bool *error);
+// This function is used to retrieve the time constant of the low-pass filter (tau).
+float GetTauValue(const PID *const pid, bool *error);
+
+// Add a description here.
+bool SetIntegratorSatMinValue(PID *pid, const float integratorSatMin);
+// Add a description here.
+bool SetIntegratorSatMaxValue(PID *pid, const float integratorSatMax);
+// Add a description here.
+float GetOutputValue(const PID *const pid, bool *error);
+
 // This function initializes a PID controller with all its parameters.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error);
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error);
 // This function calculates the output of the PID corrector according to its parameters and the measurement.
 bool UpdatePID(PID *pid, const float measurement);
 

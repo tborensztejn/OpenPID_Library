@@ -164,18 +164,25 @@ float GetFcValue(const PID *const pid, bool *error) {
 }
 
 // Add an example here.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode_param, const bool lowPassFilterStatus, bool *error) {
-    *error = true;                  // Set the error flag to true.
-    AntiWindupMode antiWindupMode;  // By default, the conditional clamping method is used.
+float GetTauValue(const PID *const pid, bool *error) {
+    float tau;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
 
-    // Check for null pointer.
-    if (antiWindupMode_param == NULL) {
-        // By default, the conditional clamping method is used.
-        antiWindupMode = AUTO_CLAMPING;
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        tau = pid->tau;
     } else {
-        // Store the anti-windup method.
-        antiWindupMode = *antiWindupMode_param;
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        tau = NAN;
     }
+
+    return tau;
+}
+
+// Add an example here.
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error) {
+    *error = true;                  // Set the error flag to true.
 
     // Check for null pointer.
     if (pid == NULL) {
@@ -183,13 +190,22 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
         //PID NewPID = PID_INITIALIZER;
         CreatePID(NewPID);
 
-        NewPID.Kp = Kp;                         // Set the Kp value.
-        NewPID.Ki = Ki;                         // Set the Ki value.
-        NewPID.Kd = Kd;                         // Set the Kd value.
-        NewPID.Ts = Ts;                         // Set the Ts value.
-        NewPID.satMin = satMin;                 // Set the satMin value.
-        NewPID.satMax = satMax;                 // Set the satMax value.
-        NewPID.antiWindupMode = antiWindupMode; // Set the anti-windup method.
+        NewPID.Kp = Kp;                 // Set the Kp value.
+        NewPID.Ki = Ki;                 // Set the Ki value.
+        NewPID.Kd = Kd;                 // Set the Kd value.
+        NewPID.Ts = Ts;                 // Set the Ts value.
+        NewPID.outSatMin = outSatMin;   // Set the outSatMin value.
+        NewPID.outSatMax = outSatMax;   // Set the outSatMax value.
+
+        // The integrator clamping saturator defaults to the PID controller's output saturator limits.
+        NewPID.integratorSatMin = outSatMin;   // Set the integratorSatMin value.
+        NewPID.integratorSatMax = outSatMax;   // Set the integratorSatMax value.
+
+        // Check that the pointer is not null.
+        // By default, the conditional clamping method is used.
+        if (antiWindupMode != NULL) {
+            NewPID.antiWindupMode = *antiWindupMode;    // Set the anti-windup method.
+        }
 
         // Check that the cut-off frequency is not too low (avoid NaN type errors).
         if (Fc > EPSILON) {
@@ -213,13 +229,22 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
         return *pid;
     }
 
-    pid->Kp = Kp;                           // Set the Kp value.
-    pid->Ki = Ki;                           // Set the Ki value.
-    pid->Kd = Kd;                           // Set the Kd value.
-    pid->Ts = Ts;                           // Set the Ts value.
-    pid->satMin = satMin;                   // Set the satMin value.
-    pid->satMax = satMax;                   // Set the satMax value.
-    pid->antiWindupMode = antiWindupMode;   // Set the anti-windup method.
+    pid->Kp = Kp;               // Set the Kp value.
+    pid->Ki = Ki;               // Set the Ki value.
+    pid->Kd = Kd;               // Set the Kd value.
+    pid->Ts = Ts;               // Set the Ts value.
+    pid->outSatMin = outSatMin; // Set the outSatMin value.
+    pid->outSatMax = outSatMax; // Set the outSatMax value.
+
+    // The integrator clamping saturator defaults to the PID controller's output saturator limits.
+    pid->integratorSatMin = outSatMin;   // Set the integratorSatMin value.
+    pid->integratorSatMax = outSatMax;   // Set the integratorSatMax value.
+
+    // Check that the pointer is not null.
+    // By default, the conditional clamping method is used.
+    if (antiWindupMode != NULL) {
+        pid->antiWindupMode = *antiWindupMode;  // Set the anti-windup method.
+    }
 
     // Check that the low-pass filter is enabled.
     if (!lowPassFilterStatus) {
@@ -266,8 +291,8 @@ bool UpdatePID(PID *pid, const float measurement) {
     float proportionalActionGain = pid->Kp * pidError;  // Calculate proportionnal action gain.
 
     if (pid->lowPassFilterStatus) {
-        //derivativeActionGain = 2.0f * pid->Kd * deltaError / (2.0f * pid->tau + pid->Te) + ((2.0f * pid->tau - pid->Te) / (2.0f * pid->tau + pid->Te)) * pid->previousDerivativeActionGain;
-        //pid->previousDerivativeActionGain = derivativeActionGain;
+        derivativeActionGain = 2.0f * pid->Kd * deltaError / (2.0f * pid->tau + pid->Ts) + ((2.0f * pid->tau - pid->Ts) / (2.0f * pid->tau + pid->Ts)) * pid->previousDerivativeActionGain;
+        pid->previousDerivativeActionGain = derivativeActionGain;
     } else {
         // Add some code here.
     }
