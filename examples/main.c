@@ -1,4 +1,4 @@
-#include "../includes/OpenPID.h"
+#include "../inc/OpenPID.h"
 
 #define KP          1.0f
 #define KI          2.5f

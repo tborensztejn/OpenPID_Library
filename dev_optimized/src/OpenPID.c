@@ -23,7 +23,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../includes/OpenPID.h"
+#include "../inc/OpenPID.h"
 
 /*** Functions with advanced safety and error management (under development). ***/
 /*

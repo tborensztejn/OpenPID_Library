@@ -23,7 +23,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../includes/OpenPID.h"
+#include "../inc/OpenPID.h"
 
 /*** Declaration of function prototypes. ***/
 
@@ -173,7 +173,7 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
         // By default, the conditional clamping method is used.
         antiWindupMode = AUTO_CLAMPING;
     } else {
-        // Store the anti-windup method. 
+        // Store the anti-windup method.
         antiWindupMode = *antiWindupMode_param;
     }
 
