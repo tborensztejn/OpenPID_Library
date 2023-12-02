@@ -164,85 +164,32 @@ float GetFcValue(const PID *const pid, bool *error) {
 }
 
 // Add an example here.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const LowPassFilterStatus *const lowPassFilterStatus, bool *error) {
-    *error = true;  // Set the error flag to true.
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode_param, const bool lowPassFilterStatus, bool *error) {
+    *error = true;                  // Set the error flag to true.
+    AntiWindupMode antiWindupMode;  // By default, the conditional clamping method is used.
 
-    // The check routine verifies that the pointer to the PID controller is not null, that the PID controller has not already been initialized.
-
-    // Check that the pointer is not null.
-    if (pid != NULL) {
-        // Check if the PID controller has already been initialized.
-        if (!pid->initialized) {
-            pid->Kp = Kp;           // Set the Kp value.
-            pid->Ki = Ki;           // Set the Ki value.
-            pid->Kd = Kd;           // Set the Kd value.
-            pid->Ts = Ts;           // Set the Ts value.
-            pid->satMin = satMin;   // Set the satMin value.
-            pid->satMax = satMax;   // Set the satMax value.
-
-            // Check that the pointer is not NULL.
-            if (lowPassFilterStatus != NULL) {
-                // Check that the low-pass filter is enabled.
-                if (*lowPassFilterStatus == ENABLED) {
-                    // Check that the cut-off frequency is not too low (avoid NaN type errors).
-                    if (Fc > EPSILON) {
-                        pid->Fc = Fc;   // Set the Fc value.
-                    } else {
-                        // The cut-off frequency is too low.
-                        pid->Fc = EPSILON;  // Set the Fc value.
-                    }
-
-                    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);          // Set the tau value.
-                    pid->lowPassFilterStatus = *lowPassFilterStatus;    // Set the low-pass filter status.
-                } else if (*lowPassFilterStatus == DISABLED) {
-                    // The low-pass filter is disabled.
-                    pid->Fc = 0.0f;  // Set the Fc value.
-                    pid->tau = 0.0f;    // Set the tau value.
-                    pid->lowPassFilterStatus = *lowPassFilterStatus;    // Set the low-pass filter status.
-                } else {
-                    // By default, the low-pass filter is enabled.
-                    // Check that the cut-off frequency is not too low (avoid NaN type errors).
-                    if (Fc > EPSILON) {
-                        pid->Fc = Fc;   // Set the Fc value.
-                    } else {
-                        // The cut-off frequency is too low.
-                        pid->Fc = EPSILON;  // Set the Fc value.
-                    }
-
-                    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
-                    pid->lowPassFilterStatus = ENABLED;         // Force the low-pass filter status.
-                }
-            } else {
-                // By default, the low-pass filter is enabled.
-                // Check that the cut-off frequency is not too low (avoid NaN type errors).
-                if (Fc > EPSILON) {
-                    pid->Fc = Fc;   // Set the Fc value.
-                } else {
-                    // The cut-off frequency is too low.
-                    pid->Fc = EPSILON;  // Set the Fc value.
-                }
-
-                pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
-                pid->lowPassFilterStatus = ENABLED;         // Force the low-pass filter status.
-            }
-
-            pid->initialized = true;    // Set the initialization flag to true.
-            *error = false;             // Set the error flag to false.
-        } else {
-            // The PID controller has already been initialized.
-            // Add some code here.
-        }
+    // Check for null pointer.
+    if (antiWindupMode_param == NULL) {
+        // By default, the conditional clamping method is used.
+        antiWindupMode = AUTO_CLAMPING;
     } else {
+        // Store the anti-windup method. 
+        antiWindupMode = *antiWindupMode_param;
+    }
+
+    // Check for null pointer.
+    if (pid == NULL) {
         // The pointer is null.
         //PID NewPID = PID_INITIALIZER;
         CreatePID(NewPID);
 
-        NewPID.Kp = Kp;         // Set the Kp value.
-        NewPID.Ki = Ki;         // Set the Ki value.
-        NewPID.Kd = Kd;         // Set the Kd value.
-        NewPID.Ts = Ts;         // Set the Ts value.
-        NewPID.satMin = satMin; // Set the satMin value.
-        NewPID.satMax = satMax; // Set the satMax value.
+        NewPID.Kp = Kp;                         // Set the Kp value.
+        NewPID.Ki = Ki;                         // Set the Ki value.
+        NewPID.Kd = Kd;                         // Set the Kd value.
+        NewPID.Ts = Ts;                         // Set the Ts value.
+        NewPID.satMin = satMin;                 // Set the satMin value.
+        NewPID.satMax = satMax;                 // Set the satMax value.
+        NewPID.antiWindupMode = antiWindupMode; // Set the anti-windup method.
 
         // Check that the cut-off frequency is not too low (avoid NaN type errors).
         if (Fc > EPSILON) {
@@ -252,13 +199,54 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
             NewPID.Fc = EPSILON;    // Set the Fc value to EPSILON.
         }
 
-        NewPID.tau = 1.0f / (2.0f * M_PI * NewPID.Fc);    // Set the tau value.
+        NewPID.tau = 1.0f / (2.0f * M_PI * NewPID.Fc);  // Set the tau value.
 
         NewPID.initialized = true;  // Set the initialization flag to true.
         *error = false;             // Set the error flag to false.
 
         return NewPID;  // Return the initialized new PID controller.
     }
+
+    // Check whether the PID controller has already been initialized.
+    if (pid->initialized) {
+        // The PID controller has already been initialized.
+        return *pid;
+    }
+
+    pid->Kp = Kp;                           // Set the Kp value.
+    pid->Ki = Ki;                           // Set the Ki value.
+    pid->Kd = Kd;                           // Set the Kd value.
+    pid->Ts = Ts;                           // Set the Ts value.
+    pid->satMin = satMin;                   // Set the satMin value.
+    pid->satMax = satMax;                   // Set the satMax value.
+    pid->antiWindupMode = antiWindupMode;   // Set the anti-windup method.
+
+    // Check that the low-pass filter is enabled.
+    if (!lowPassFilterStatus) {
+        // The low-pass filter is disabled.
+        pid->Fc = 0.0f;                                 // Set the Fc value.
+        pid->tau = 0.0f;                                // Set the tau value.
+        pid->lowPassFilterStatus = lowPassFilterStatus; // Set the low-pass filter status.
+        pid->initialized = true;                        // Set the initialization flag to true.
+        *error = false;                                 // Set the error flag to false.
+
+        return *pid;
+    }
+
+    // Check that the cut-off frequency is not too low (avoid NaN type errors).
+    if (Fc > EPSILON) {
+        pid->Fc = Fc;   // Set the Fc value.
+    } else {
+        // The cut-off frequency is too low.
+        pid->Fc = EPSILON;  // Set the Fc value.
+    }
+
+    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);      // Set the tau value.
+    pid->lowPassFilterStatus = lowPassFilterStatus; // Set the low-pass filter status.
+    pid->initialized = true;                        // Set the initialization flag to true.
+    *error = false;                                 // Set the error flag to false.
+
+    return *pid;
 }
 
 bool UpdatePID(PID *pid, const float measurement) {

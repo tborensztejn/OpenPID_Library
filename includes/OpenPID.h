@@ -28,16 +28,15 @@
 
 #include "../../OpenAHRS_9DOF/includes/Utils.h"
 
+#define DISABLED    false
+#define ENABLED     true
+
 /* Further strategies will be added later. */
 typedef enum {
-    MANUAL, // Manual mode of the anti-windup strategy (clamping method).
-    AUTO,   // Automatic mode of the anti-windup strategy (conditional clamping method).
+    MANUAL_CLAMPING,    // Manual mode of the anti-windup strategy (clamping method).
+    AUTO_CLAMPING,      // Automatic mode of the anti-windup strategy (conditional clamping method).
+    //OBSERVER,         // Future implementation.
 } AntiWindupMode;
-
-typedef enum {
-    ENABLED,
-    DISABLED,
-} LowPassFilterStatus;
 
 typedef struct {
     float Kp;               // Gain of the proportional action.
@@ -86,8 +85,8 @@ typedef struct {
         and to choose the cut-off frequency carefully.
     */
 
-    LowPassFilterStatus lowPassFilterStatus;    // Enable or disable low-pass filter on PID controller derivative action (enabled by default).
-    bool initialized;                           // Initialization flag.
+    bool lowPassFilterStatus;   // Enable or disable low-pass filter on PID controller derivative action (enabled by default).
+    bool initialized;           // Initialization flag.
 } PID;
 
 #define PID_INITIALIZER { \
@@ -101,7 +100,7 @@ typedef struct {
     .satMax = 0.0f, \
     .setpoint = 0.0f, \
     .previousError = 0.0f, \
-    .antiWindupMode = AUTO, \
+    .antiWindupMode = AUTO_CLAMPING, \
     .lowPassFilterStatus = ENABLED, \
     .initialized = false \
 } \
@@ -138,7 +137,7 @@ bool SetFcValue(PID *pid, const float Fc);
 // This function is used to retrieve the cut-off frequency of the low-pass filter (Fc).
 float GetFcValue(const PID *const pid, bool *error);
 // This function initializes a PID controller with all its parameters.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const LowPassFilterStatus *const lowPassFilterStatus, bool *error);
+PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float satMin, const float satMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error);
 // This function calculates the output of the PID corrector according to its parameters and the measurement.
 bool UpdatePID(PID *pid, const float measurement);
 
