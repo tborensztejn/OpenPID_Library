@@ -31,6 +31,13 @@
 #define DISABLED    false
 #define ENABLED     true
 
+typedef enum {
+    ERR_NUL_PTR,
+    ERR_NAN,
+    ERR_INF,
+    ERR_NOT_POSITIVE,   // The value is not positive.
+} ErrorCode;
+
 /* Further strategies will be added later. */
 typedef enum {
     MANUAL_CLAMPING,    // Manual mode of the anti-windup strategy (clamping method).
@@ -52,7 +59,9 @@ typedef struct {
     float setpoint;                     // Setpoint of the PID controller.
     float output;                       // The ouput calculated by the PID controller.
     float previousError;                // The previous error calculated.
+    float sumErrors;                    // Sum of errors.
     float previousDerivativeActionGain; // The previous derivative action gain.
+    float previousIntegralActionGain;   // The previous integral action gain.
 
     /*
         Note:
@@ -89,8 +98,9 @@ typedef struct {
         and to choose the cut-off frequency carefully.
     */
 
-    bool lowPassFilterStatus;   // Enable or disable low-pass filter on PID controller derivative action (enabled by default).
-    bool initialized;           // Initialization flag.
+    bool lowPassFilterStatus;       // Enable or disable low-pass filter on PID controller derivative action (enabled by default).
+    bool conditionalIntegration;    // Conditional intergration status.
+    bool initialized;               // Initialization flag.
 } PID;
 
 #define PID_INITIALIZER { \
@@ -107,9 +117,12 @@ typedef struct {
     .setpoint = 0.0f, \
     .output = 0.0f, \
     .previousError = 0.0f, \
+    .sumErrors = 0.0f, \
     .previousDerivativeActionGain = 0.0f, \
+    .previousIntegralActionGain = 0.0f, \
     .antiWindupMode = AUTO_CLAMPING, \
     .lowPassFilterStatus = ENABLED, \
+    .conditionalIntegration = true, \
     .initialized = false \
 } \
 
@@ -131,7 +144,8 @@ typedef struct {
 // This function is used to modify the gain value of the PID controller's proportional action (Kp).
 bool SetKpValue(PID *pid, const float Kp);
 // This function is used to retrieve the gain value of the PID controller's proportional action (Kp).
-float GetKpValue(const PID *const pid, bool *error);
+//float GetKpValue(const PID *const pid, bool *error);
+float GetKpValue(const PID *const pid, bool *error, ErrorCode *errorCode);
 // This function is used to modify the gain value of the PID controller's integral action (Ki).
 bool SetKiValue(PID *pid, const float Ki);
 // This function is used to retrieve the gain value of the PID controller's integral action (Ki).

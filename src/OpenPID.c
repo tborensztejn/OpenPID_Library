@@ -42,10 +42,35 @@ bool SetKpValue(PID *pid, const float Kp) {
     return error;
 }
 
+/*
 // Add an example here.
 float GetKpValue(const PID *const pid, bool *error) {
     float Kp;       // Declare the variable that will store the returned value.
     *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid->initialized) {
+        Kp = pid->Kp;
+    } else {
+        // The PID controller is not initialized.
+        *error = true;   // Set the error flag to true.
+        Kp = NAN;
+    }
+
+    return Kp;
+}
+*/
+
+// Add an example here.
+float GetKpValue(const PID *const pid, bool *error, ErrorCode *errorCode) {
+    float Kp;       // Declare the variable that will store the returned value.
+    *error = false; // Set the error flag to false.
+
+    // Check that the PID controller is initialized.
+    if (pid == NULL) {
+        // The pointer is NULL.
+        
+    }
 
     // Check that the PID controller is initialized.
     if (pid->initialized) {
@@ -274,6 +299,19 @@ PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const floa
     return *pid;
 }
 
+/*
+    PID controller using manual clamping, without low-pass filter and Euler backward method.
+
+    Pseudocode:
+    error = setpoint - measurements
+    sum_errors = sum_errors + error
+    sum_errors = sat(sum_errors, min_sum_errors, max_sum_errors)
+    delta_error = error - previous_error
+    previous_error = error
+    output = Kp * error + Ki + Ts * sum_errors + Kd * delta_error / Ts
+    output = sat(output, min_output, max_output)
+ */
+
 bool UpdatePID(PID *pid, const float measurement) {
     bool error = false; // Initialize the error flag to false.
     float derivativeActionGain = 0.0f;
@@ -291,10 +329,26 @@ bool UpdatePID(PID *pid, const float measurement) {
     float proportionalActionGain = pid->Kp * pidError;  // Calculate proportionnal action gain.
 
     if (pid->lowPassFilterStatus) {
+        // Bilinear transformation (Tustin method).
         derivativeActionGain = 2.0f * pid->Kd * deltaError / (2.0f * pid->tau + pid->Ts) + ((2.0f * pid->tau - pid->Ts) / (2.0f * pid->tau + pid->Ts)) * pid->previousDerivativeActionGain;
         pid->previousDerivativeActionGain = derivativeActionGain;
     } else {
         // Add some code here.
+    }
+
+    if (pid->antiWindupMode == AUTO_CLAMPING) {
+        if (pid->conditionalIntegration) {
+            // Bilinear transformation (Tustin method).
+            float integralActionGain = pid->Ki * pid->Ts * (pidError + pid->previousError) / 2.0f + pid->previousIntegralActionGain;
+        } else {
+            // Add some code here.
+        }
+    } else if (pid->antiWindupMode == MANUAL_CLAMPING) {
+        pid->sumErrors += pidError;
+        pid->sumErrors = Sat(pid->sumErrors, pid->integratorSatMin, pid->integratorSatMax);
+        // Euler backward transformation.
+        pid->output = pid->Kp * pidError + pid->Ki + pid->Ts * pid->sumErrors + pid->Kd * deltaError / pid->Ts;
+        pid->output = Sat(pid->output, pid->outSatMin, pid->outSatMax);
     }
 
     return error;

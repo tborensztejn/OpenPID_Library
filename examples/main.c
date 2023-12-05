@@ -8,7 +8,7 @@
 #define OUT_MIN     100.0f
 #define OUT_MAX     -100.0f
 
-bool main(void) {
+int main(void) {
     bool error = false;
 
     /* Basic initialization. */
@@ -34,5 +34,6 @@ bool main(void) {
     InitPID(NULL, KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, &antiWindupMode, &lowPassFilterStatus, &error);
     */
 
-    return error;
+    //return error;
+    return 0;
 }
