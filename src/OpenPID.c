@@ -1,8 +1,3 @@
-/********************************************************
-* OpenPID                                               *
-* $ Id: OpenPID.c v1.0 28/11/2023 22:10 t.borensztejn $ *
-********************************************************/
-
 /*
     MIT License.
     Copyright 2023 Titouan Borensztejn <borensztejn.titouan@gmail.com>
@@ -25,147 +20,324 @@
 
 #include "../inc/OpenPID.h"
 
+PID_ErrorCode _PID_ErrorCode;
+
 /*** Declaration of function prototypes. ***/
 
 // Add an example here.
+bool CheckValue(const float value) {
+    bool error = false;         // Initialize the error flag to false.
+    //_PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
+
+    // Check that the value is valid.
+    if (isnan(value)) {
+        // The value is not valid.
+        _PID_ErrorCode = ERR_NAN;   // Set the error code to ERR_NAN.
+        error = true;               // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check that the value is finite.
+    if (isinf(value)) {
+        // The value is infinite.
+        _PID_ErrorCode = ERR_INF;   // Set the error code to ERR_INF.
+        error = true;               // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check for float overflow.
+    if (value > FLT_MAX) {
+        // The value is too big.
+        _PID_ErrorCode = ERR_EXCEED_FLT;    // Set the error code to ERR_EXCEED_FLT.
+        error = true;                       // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    return error;   // Return the state of the error flag.
+}
+
+// Add an example here.
 bool SetKpValue(PID *pid, const float Kp) {
-    bool error = false;  // Initialize the error flag to false.
-
-    // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        pid->Kp = Kp;
-    } else {
-        // The PID controller is not initialized.
-        error = true;   // Set the error flag to true.
-    }
-
-    return error;
-}
-
-/*
-// Add an example here.
-float GetKpValue(const PID *const pid, bool *error) {
-    float Kp;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
-
-    // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        Kp = pid->Kp;
-    } else {
-        // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        Kp = NAN;
-    }
-
-    return Kp;
-}
-*/
-
-// Add an example here.
-float GetKpValue(const PID *const pid, bool *error, ErrorCode *errorCode) {
-    float Kp;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
+    bool error = false;         // Initialize the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
     if (pid == NULL) {
         // The pointer is NULL.
-        
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
     }
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        Kp = pid->Kp;
-    } else {
+    if (!pid->initialized) {
         // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        Kp = NAN;
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
     }
 
-    return Kp;
+    error = CheckValue(Kp); // Check that the value can be used.
+
+    if (error) {
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check if the value is positive.
+    if (Kp < 0.0f) {
+        // The value is negative.
+        _PID_ErrorCode = ERR_NEGATIVE;  // Set the error code to ERR_NEGATIVE.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    pid->Kp = Kp;
+
+    return error;
+}
+
+// Add an example here.
+float GetKpValue(const PID *const pid, bool *error) {
+    *error = false;             // Set the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
+
+    // Check that the PID controller is initialized.
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    *error = CheckValue(pid->Kp);   // Check that the value can be used.
+
+    if (*error) {
+        return 0.0f;    // Return a zero value.
+    }
+
+    return pid->Kp;
 }
 
 // Add an example here.
 bool SetKiValue(PID *pid, const float Ki) {
-    bool error = false;  // Initialize the error flag to false.
+    bool error = false;         // Initialize the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        pid->Ki = Ki;
-    } else {
-        // The PID controller is not initialized.
-        error = true;   // Set the error flag to true.
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
     }
+
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    error = CheckValue(Ki); // Check that the value can be used.
+
+    if (error) {
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check if the value is positive.
+    if (Ki < 0.0f) {
+        // The value is negative.
+        _PID_ErrorCode = ERR_NEGATIVE;  // Set the error code to ERR_NEGATIVE.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    pid->Ki = Ki;
 
     return error;
 }
 
 // Add an example here.
 float GetKiValue(const PID *const pid, bool *error) {
-    float Ki;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
+    *error = false;             // Set the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        Ki = pid->Ki;
-    } else {
-        // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        Ki = NAN;
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
     }
 
-    return Ki;
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    *error = CheckValue(pid->Ki);   // Check that the value can be used.
+
+    if (*error) {
+        return 0.0f;    // Return a zero value.
+    }
+
+    return pid->Ki;
 }
 
 // Add an example here.
 bool SetKdValue(PID *pid, const float Kd) {
-    bool error = false;  // Initialize the error flag to false.
+    bool error = false;         // Initialize the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        pid->Kd = Kd;
-    } else {
-        // The PID controller is not initialized.
-        error = true;   // Set the error flag to true.
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
     }
+
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    error = CheckValue(Kd); // Check that the value can be used.
+
+    if (error) {
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check if the value is positive.
+    if (Kd < 0.0f) {
+        // The value is negative.
+        _PID_ErrorCode = ERR_NEGATIVE;  // Set the error code to ERR_NEGATIVE.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    pid->Kd = Kd;
 
     return error;
 }
 
 // Add an example here.
 float GetKdValue(const PID *const pid, bool *error) {
-    float Kd;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
+    *error = false;             // Set the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        Kd = pid->Kd;
-    } else {
-        // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        Kd = NAN;
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
     }
 
-    return Kd;
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    *error = CheckValue(pid->Kd);   // Check that the value can be used.
+
+    if (*error) {
+        return 0.0f;    // Return a zero value.
+    }
+
+    return pid->Kd;
 }
 
 // Add an example here.
 bool SetFcValue(PID *pid, const float Fc) {
-    bool error = false;  // Initialize the error flag to false.
+    bool error = false;         // Initialize the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        // Check that the cut-off frequency is not too low (avoid NaN type errors).
-        if (Fc > EPSILON) {
-            pid->Fc = Fc;   // Set the Fc value.
-        } else {
-            // The cut-off frequency is too low.
-            pid->Fc = EPSILON;  // Set the Fc value.
-        }
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        error = true;                   // Set the error flag to true.
 
-        pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
-    } else {
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
         // The PID controller is not initialized.
-        error = true;   // Set the error flag to true.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    error = CheckValue(Fc); // Check that the value can be used.
+
+    if (error) {
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check if the value is positive.
+    if (Fc < 0.0f) {
+        // The value is negative.
+        _PID_ErrorCode = ERR_NEGATIVE;  // Set the error code to ERR_NEGATIVE.
+        error = true;                   // Set the error flag to true.
+
+        return error;   // Return the state of the error flag.
+    }
+
+    // Check that the cut-off frequency is not too low (avoid NaN type errors).
+    if (Fc > EPSILON) {
+        pid->Fc = Fc;   // Set the Fc value.
+    } else {
+        // The cut-off frequency is too low.
+        pid->Fc = EPSILON;  // Set the Fc value.
+    }
+
+    pid->tau = 1.0f / (2.0f * M_PI * pid->Fc);  // Set the tau value.
+
+    error = CheckValue(pid->tau); // Check that the value can be used.
+
+    if (error) {
+        pid->tau = FLT_MAX;
+
+        return error;   // Return the state of the error flag.
     }
 
     return error;
@@ -173,37 +345,76 @@ bool SetFcValue(PID *pid, const float Fc) {
 
 // Add an example here.
 float GetFcValue(const PID *const pid, bool *error) {
-    float Fc;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
+    *error = false;             // Set the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        Fc = pid->Fc;
-    } else {
-        // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        Fc = NAN;
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
     }
 
-    return Fc;
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    *error = CheckValue(pid->Fc);   // Check that the value can be used.
+
+    if (*error) {
+        return 0.0f;    // Return a zero value.
+    }
+
+    return pid->Fc;
 }
 
 // Add an example here.
 float GetTauValue(const PID *const pid, bool *error) {
-    float tau;       // Declare the variable that will store the returned value.
-    *error = false; // Set the error flag to false.
+    *error = false;             // Set the error flag to false.
+    _PID_ErrorCode = NO_ERR;    // Set the error code to NO_ERR.
 
     // Check that the PID controller is initialized.
-    if (pid->initialized) {
-        tau = pid->tau;
-    } else {
-        // The PID controller is not initialized.
-        *error = true;   // Set the error flag to true.
-        tau = NAN;
+    if (pid == NULL) {
+        // The pointer is NULL.
+        _PID_ErrorCode = ERR_NULL_PTR;  // Set the error code to ERR_NULL_PTR.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
     }
 
-    return tau;
+    // Check that the PID controller is initialized.
+    if (!pid->initialized) {
+        // The PID controller is not initialized.
+        _PID_ErrorCode = ERR_NOT_INIT;  // Set the error code to ERR_NOT_INIT.
+        *error = true;                  // Set the error flag to true.
+
+        return 0.0f;    // Return a zero value.
+    }
+
+    *error = CheckValue(pid->tau);   // Check that the value can be used.
+
+    if (*error) {
+        return 0.0f;    // Return a zero value.
+    }
+
+    return pid->tau;
 }
+
+
+
+
+
+
+
+
+
 
 // Add an example here.
 PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error) {

@@ -23,6 +23,14 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// clear && gcc -std=c11 -Wall -Wextra -pedantic -lm ../../OpenAHRS_9DOF/src/Utils.c ../examples/main.c ../src/OpenPID.c -o OpenPID && ./OpenPID
+// clear && git checkout main && git add --all && git commit -m "Automatic update - $(date)" && git push origin main
+// cp -fvr /mnt/c/Users/boren/Desktop/IMU/OpenPID/* ./
+// clear && gcc src/Linalg.c ../src/Utils.c src/Common.c src/Matrix.c src/Vector.c -o linalg -lm && ./linalg
+//  make clean && make && python3 generate_raw_measurements.py && cat build/raw_measurements.csv && cd build/ && ./OpenAHRS_9DOF && cd .. && find * -type f -exec md5sum {} + | while read sum file; do md5sum_dest=$(md5sum "/home/titoune/github/OpenAHRS/$file" 2>/dev/null | awk '{print $1}'); [ "$sum" != "$md5sum_dest" ] && echo "Copy of : $file" && cp "$file" "/home/titoune/github/OpenAHRS/$file"; done
+// clear && git checkout main && git add --all && git commit -m "Automatic update - $(date)" && git push origin main
+
+
 #ifndef OPEN_PID_H
 #define OPEN_PID_H
 
@@ -32,11 +40,17 @@
 #define ENABLED     true
 
 typedef enum {
-    ERR_NUL_PTR,
+    NO_ERR,
+    ERR_NULL_PTR,    //
+    ERR_NOT_INIT,
     ERR_NAN,
     ERR_INF,
-    ERR_NOT_POSITIVE,   // The value is not positive.
-} ErrorCode;
+    ERR_NEGATIVE,   // The value is not positive.
+    ERR_EXCEED_FLT,
+} PID_ErrorCode;
+
+//bool _errorFlag = false;
+extern PID_ErrorCode _PID_ErrorCode;
 
 /* Further strategies will be added later. */
 typedef enum {
@@ -145,7 +159,7 @@ typedef struct {
 bool SetKpValue(PID *pid, const float Kp);
 // This function is used to retrieve the gain value of the PID controller's proportional action (Kp).
 //float GetKpValue(const PID *const pid, bool *error);
-float GetKpValue(const PID *const pid, bool *error, ErrorCode *errorCode);
+float GetKpValue(const PID *const pid, bool *error);
 // This function is used to modify the gain value of the PID controller's integral action (Ki).
 bool SetKiValue(PID *pid, const float Ki);
 // This function is used to retrieve the gain value of the PID controller's integral action (Ki).
