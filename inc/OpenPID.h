@@ -40,16 +40,15 @@
 #define ENABLED     true
 
 typedef enum {
-    NO_ERR,
-    ERR_NULL_PTR,    //
-    ERR_NOT_INIT,
-    ERR_NAN,
-    ERR_INF,
-    ERR_NEGATIVE,   // The value is not positive.
-    ERR_EXCEED_FLT,
+    NO_ERR,         // No error.
+    ERR_NULL_PTR,   // Null pointer error.
+    ERR_NOT_INIT,   // Non-initialized error.
+    ERR_NAN,        // NaN value error.
+    ERR_INF,        // Inf value error.
+    ERR_NEGATIVE,   // Negative value error.
+    ERR_EXCEED_FLT, // Float overflow error.
 } PID_ErrorCode;
 
-//bool _errorFlag = false;
 extern PID_ErrorCode _PID_ErrorCode;
 
 /* Further strategies will be added later. */
