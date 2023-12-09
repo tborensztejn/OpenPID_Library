@@ -1,8 +1,3 @@
-/********************************************************
-* OpenPID                                               *
-* $ Id: OpenPID.h v1.0 28/11/2023 22:10 t.borensztejn $ *
-********************************************************/
-
 /*
     MIT License.
     Copyright 2023 Titouan Borensztejn <borensztejn.titouan@gmail.com>
@@ -47,9 +42,11 @@ typedef enum {
     ERR_INF,        // Inf value error.
     ERR_NEGATIVE,   // Negative value error.
     ERR_EXCEED_FLT, // Float overflow error.
+    ERR_CRITICAL,   // Critical error.
 } PID_ErrorCode;
 
 extern PID_ErrorCode _PID_ErrorCode;
+extern bool _criticalErrorFlag;
 
 /* Further strategies will be added later. */
 typedef enum {
@@ -182,7 +179,7 @@ bool SetIntegratorSatMaxValue(PID *pid, const float integratorSatMax);
 float GetOutputValue(const PID *const pid, bool *error);
 
 // This function initializes a PID controller with all its parameters.
-PID InitPID(PID *pid, const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode *const antiWindupMode, const bool lowPassFilterStatus, bool *error);
+PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode antiWindupMode, const bool lowPassFilterStatus, bool *error);
 // This function calculates the output of the PID corrector according to its parameters and the measurement.
 bool UpdatePID(PID *pid, const float measurement);
 

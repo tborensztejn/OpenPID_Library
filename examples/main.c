@@ -27,7 +27,7 @@ int main(void) {
     // Enable or disable low-pass filter on derivative action.
     const bool lowPassFilterStatus = ENABLED;                   // Enable low-pass filter.
     //const bool lowPassFilterStatus = DISABLED;                // Disable low-pass filter.
-    PID myPID = InitPID(NULL, KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, &antiWindupMode, lowPassFilterStatus, &error);
+    PID myPID = InitPID(KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, antiWindupMode, lowPassFilterStatus, &error);
     // The code below is the same as the code above.
     /*
     CreatePID(myPID);
