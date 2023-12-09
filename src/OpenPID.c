@@ -21,7 +21,7 @@
 #include "../inc/OpenPID.h"
 
 PID_ErrorCode _PID_ErrorCode;
-bool _criticalErrorFlag = false;
+bool _error = false;
 
 /*** Declaration of function prototypes. ***/
 
@@ -126,12 +126,15 @@ bool SetKpValue(PID *pid, const float Kp) {
     return error;
 }
 
+/*
 // Add an example here.
 float GetKpValue(const PID *const pid, bool *error) {
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return 0.0f;    // Return a zero value.
     }
 
     *error = false;             // Set the error flag to false.
@@ -163,6 +166,7 @@ float GetKpValue(const PID *const pid, bool *error) {
 
     return pid->Kp;
 }
+*/
 
 // Add an example here.
 bool SetKiValue(PID *pid, const float Ki) {
@@ -203,7 +207,9 @@ float GetKiValue(const PID *const pid, bool *error) {
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return 0.0f;    // Return a zero value.
     }
 
     *error = false;             // Set the error flag to false.
@@ -275,7 +281,9 @@ float GetKdValue(const PID *const pid, bool *error) {
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return 0.0f;    // Return a zero value.
     }
 
     *error = false;             // Set the error flag to false.
@@ -363,7 +371,9 @@ float GetFcValue(const PID *const pid, bool *error) {
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return 0.0f;    // Return a zero value.
     }
 
     *error = false;             // Set the error flag to false.
@@ -401,7 +411,9 @@ float GetTauValue(const PID *const pid, bool *error) {
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return 0.0f;    // Return a zero value.
     }
 
     *error = false;             // Set the error flag to false.
@@ -436,16 +448,16 @@ float GetTauValue(const PID *const pid, bool *error) {
 
 // Add an example here.
 PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, const float Fc, const float outSatMin, const float outSatMax, const AntiWindupMode antiWindupMode, const bool lowPassFilterStatus, bool *error) {
+    CreatePID(pid);                         // Create a non-initialized PID controller.
+    pid.initialized = true;                 // Set the initialization flag to true.
+
     // Check that the pointer is not NULL.
     if (error == NULL) {
         _PID_ErrorCode = ERR_CRITICAL;
-        _criticalErrorFlag = true;
+        _error = true;
+
+        return pid;                         // Return the uninitialized PID controller.
     }
-
-    *error = false;                         // Set the error flag to false.
-
-    CreatePID(pid);                         // Create a non-initialized PID controller.
-    pid.initialized = true;                 // Set the initialization flag to true.
 
     *error = SetKpValue(&pid, Kp);          // Set Kp value.
 
@@ -453,7 +465,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     *error = SetKiValue(&pid, Ki);          // Set Ki value.
@@ -462,7 +474,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     *error = SetKdValue(&pid, Kd);          // Set Kd value.
@@ -471,7 +483,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     *error = CheckParam(Ts);                // Check that the value can be used.
@@ -480,7 +492,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     pid.Ts = Ts;                            // Set the Ts value.
@@ -491,7 +503,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     pid.outSatMin = outSatMin;              // Set the outSatMin value.
@@ -502,7 +514,7 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
     pid.outSatMax = outSatMax;              // Set the outSatMax value.
@@ -519,10 +531,10 @@ PID InitPID(const float Kp, const float Ki, const float Kd, const float Ts, cons
     if (*error) {
         pid.initialized = false;            // Set the initialization flag to false.
 
-        return pid;                         // Return the uninitialized or partially initialized PID.
+        return pid;                         // Return the uninitialized or partially initialized PID controller.
     }
 
-    return pid;                             // Return the initialized new PID controller.
+    return pid;                             // Return the initialized PID controller.
 }
 
 bool UpdatePID(PID *pid, const float measurement) {

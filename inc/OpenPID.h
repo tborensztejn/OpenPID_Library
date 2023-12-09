@@ -46,7 +46,7 @@ typedef enum {
 } PID_ErrorCode;
 
 extern PID_ErrorCode _PID_ErrorCode;
-extern bool _criticalErrorFlag;
+extern bool _error;
 
 /* Further strategies will be added later. */
 typedef enum {
@@ -155,7 +155,7 @@ typedef struct {
 bool SetKpValue(PID *pid, const float Kp);
 // This function is used to retrieve the gain value of the PID controller's proportional action (Kp).
 //float GetKpValue(const PID *const pid, bool *error);
-float GetKpValue(const PID *const pid, bool *error);
+bool GetKpValue(const PID *const pid, float *Kp);
 // This function is used to modify the gain value of the PID controller's integral action (Ki).
 bool SetKiValue(PID *pid, const float Ki);
 // This function is used to retrieve the gain value of the PID controller's integral action (Ki).
