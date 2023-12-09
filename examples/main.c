@@ -11,16 +11,6 @@
 int main(void) {
     bool error = false;
 
-    /* Basic initialization. */
-    // By default, the low-pass filter on derivative action is enabled and the conditional clamping method is used.
-    //PID myPID = InitPID(NULL, KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, NULL, ENABLED, &error);
-    // The code below is the same as the code above.
-    /*
-    CreatePID(myPID);
-    InitPID(&myPID, KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, &error);
-    */
-
-    /* Advanced initialization. */
     // Configure the clamping method.
     const AntiWindupMode antiWindupMode = AUTO_CLAMPING;        // Automatic (conditional clamping method).
     //const AntiWindupMode antiWindupMode = MANUAL_CLAMPING;    // Manual (clamping method).
@@ -28,11 +18,13 @@ int main(void) {
     const bool lowPassFilterStatus = ENABLED;                   // Enable low-pass filter.
     //const bool lowPassFilterStatus = DISABLED;                // Disable low-pass filter.
     PID myPID = InitPID(KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, antiWindupMode, lowPassFilterStatus, &error);
-    // The code below is the same as the code above.
-    /*
-    CreatePID(myPID);
-    InitPID(NULL, KP, KI, KD, TS, FC, OUT_MIN, OUT_MAX, &antiWindupMode, &lowPassFilterStatus, &error);
-    */
+
+    if (error) {
+        printf("Error.\n");
+        printf("%d\n", _PID_ErrorCode);
+
+        return 1;
+    }
 
     //return error;
     return 0;

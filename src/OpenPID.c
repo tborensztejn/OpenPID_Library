@@ -58,7 +58,7 @@ bool CheckValue(const float value) {
     }
 
     // Check for float overflow.
-    if (value < FLT_MIN) {
+    if (value < -FLT_MAX) {
         // The value is too big.
         _PID_ErrorCode = ERR_EXCEED_FLT;    // Set the error code to ERR_EXCEED_FLT.
         error = true;                       // Set the error flag to true.
